@@ -11,13 +11,15 @@ class Menu:
         self.current_option = 0
 
     def append_option(self, option, callback):
-        self.buttons.append(FONT.render(option, False, (255, 255, 255)))
+        self.buttons.append(FONT.render(option, True, (255, 255, 255)))
         self.functions.append(callback)
 
     def switch(self, direction):
         self.current_option = max(0, min(self.current_option + direction, len(self.buttons) - 1))
 
     def select(self):
+        if self.current_option == 1:
+            switch_scene(stats)
         self.functions[self.current_option]()
 
     def draw(self, surf, x, y, option):
@@ -29,19 +31,35 @@ class Menu:
             surf.blit(opt, option_rect)
 
 
-menu = Menu()
-menu.append_option('New game', lambda: print('New game'))
-menu.append_option('Player statistics', lambda: print('statistic'))
-menu.append_option('Quit', quit)
+class Wallpaper:
+    def __init__(self):
+        pass
 
-if __name__ == '__main__':
+    def run(self, screen):
+        screen.fill((0, 0, 0))
+
+
+def switch_scene(scene):
+    global current_scene
+    current_scene = scene
+
+
+current_scene = None
+
+menu = Menu()
+menu.append_option('Новая игра', lambda: print('new game'))
+menu.append_option('Статистика игрока', lambda: print('statistic'))
+menu.append_option('Выйти', quit)
+# создать бд и читать количесво побед от туда
+all_games = FONT.render(f'Всего игр сыграно: {0}', True, (255, 0, 0))
+wallpaper = Wallpaper()
+
+def scene1():
     pygame.init()
     screen = pygame.display.set_mode((800, 800))
     pygame.display.set_caption('Сапер')
     running = True
-
     while running:
-
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -52,10 +70,32 @@ if __name__ == '__main__':
                     menu.switch(1)
                 elif event.key == K_SPACE:
                     menu.select()
-        screen.fill((0, 0, 0))
-        menu.draw(screen, 100, 100, 75)
+                    running = False
+        wallpaper.run(screen)
+        menu.draw(screen, 250, 300, 75)
         pygame.display.flip()
-
-
     pygame.quit()
 
+def stats():
+    pygame.init()
+    screen = pygame.display.set_mode((800, 800))
+    pygame.display.set_caption('Сапер')
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+                switch_scene(None)
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                running = False
+                switch_scene(scene1)
+        wallpaper.run(screen)
+        draw.rect(screen, (255, 255, 255), (200, 200, 400, 400))
+        screen.blit(all_games, (220, 300))
+        pygame.display.flip()
+    pygame.quit()
+
+
+switch_scene(scene1)
+while current_scene is not None:
+    current_scene()
