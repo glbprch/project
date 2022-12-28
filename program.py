@@ -1,7 +1,7 @@
 import pygame.font
 from pygame import *
 pygame.font.init()
-FONT = pygame.font.SysFont('calibry', 50)
+FONT = pygame.font.SysFont('calibry', 50) 
 
 
 class Menu:
@@ -33,10 +33,19 @@ class Menu:
 
 class Wallpaper:
     def __init__(self):
-        pass
-
+        self.screen = pg.display.set_mode(RES)
+        self.clock = pg.time.Clock()
+    def run(self):
+        while True:
+            self.screen.fill ('black')
+            
+            pg.display.flip()
+            [exit() for i in pg.events.get() if i.tipe == pg.QUIT]
+            self.clock.tick()
+            
     def run(self, screen):
         screen.fill((0, 0, 0))
+        pass
 
 
 def switch_scene(scene):
