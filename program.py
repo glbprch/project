@@ -1,9 +1,13 @@
 import pygame.font
 from pygame import *
 import random
+import math
+
+vec2, vec3 = pg.math.Vector2, pg.math.Vector3
 pygame.font.init()
 FONT = pygame.font.SysFont('calibry', 50)
-
+RES = WIDTH, HEIGHT = 1600, 900
+NUM_STARS = 101
 
 class Menu:
     def __init__(self):
@@ -33,14 +37,41 @@ class Menu:
                 draw.rect(surf, pygame.Color('green'), option_rect)
             surf.blit(opt, option_rect)
 
-
-class Wallpaper:
-    def __init__(self):
+class Star:
+    def __init__(self, app):
+        pass
+    
+    def update(self):
+        pass
+    
+    def draw(self):
         pass
 
-    def run(self, screen):
-        screen.fill((0, 0, 0))
-
+class Starfild:
+    def __init__(self, app):
+        self.stars = [Star(app) for i in range(NUM_STARS)]
+    
+    def run(self):
+        [star.update() for star in self.stars]
+        [star.draw() for star in self.stars]
+        
+class Wallpaper:
+    def __init__(self):
+        self.screen = pg.display.set_mode(RES)
+        self.clock = pg.time.Clock()
+        self.starfild = Starfild(self)
+        
+        
+    def run(self):
+        while True:
+            self.screen.fill ('black')
+            self.starfild.run()
+            
+            pg.display.flip()
+            [exit() for i in pg.events.get() if i.tipe == pg.QUIT]
+            self.clock.tick()
+                pass
+    
 
 class Game:
     def __init__(self, board, size):
