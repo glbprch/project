@@ -27,7 +27,7 @@ class Menu:
         if self.current_option == 1:
             switch_scene(stats)
         if self.current_option == 0:
-            switch_scene(game)
+            switch_scene(scene2)
         self.functions[self.current_option]()
 
     def draw(self, surf, x, y, option):
@@ -73,76 +73,53 @@ class Wallpaper:
 
 class Game:
     def __init__(self, board, size):
-        self.board = board
-        self.size = size
+        self.board = Board(board, size)
+        self.size = board
+        self.screenSize = (800, 800)
+        self.pieceSize = (self.screenSize[0] / self.size[1], self.screenSize[1] / self.size[0])
         self.loadImages()
-        # необходимо найти картинки
         self.solver = Solver(self.board)
 
     def run(self):
         pygame.init()
-        self.screen = pygame.display.set_mode(self.size)
+        self.screen = pygame.display.set_mode(self.screenSize)
+
         running = True
         while running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
                 if event.type == pygame.MOUSEBUTTONDOWN and not(self.board.get_win() or self.board.get_lost()):
-                    self.Click(pygame.mouse.get_pos(), pygame.mouse.get_pressed(num_buttons=3)[2])
+                    self.Click(pygame.mouse.get_pos(), pygame.mouse.get_pressed()[2])
                 if event.type == pygame.KEYDOWN:
                     self.solver.move()
+                self.screen.fill((0, 0 ,0))
                 self.draw()
                 pygame.display.flip()
+                if self.board.get_win():
+                    running = False
+                    # Over()
         pygame.quit()
 
     def draw(self):
-        point = (20, 50)
+        point = (0, 0)
         for row in self.board.getBoard():
             for column in row:
-                cell = pygame.Rect(point, (25, 25))
+                cell = pygame.Rect(point, self.pieceSize)
                 image = self.images[self.getImage(column)]
                 self.screen.blit(image, point)
-                point = point[0] + 25, point[1] # вспомнить какой я хочу задавать размер клетки
-            point = 20, point[1] + 25
+                point = point[0] + self.pieceSize[0], point[1]
+            point = 0, point[1] + self.pieceSize[0]
 
     def loadImages(self):
-        # сделать красивее и короче
-        # пройтись по списку и брать путь к файлам
+        lst = ['pics/0.png', 'pics/not_e.png', 'pics/bomb.png', 'pics/1.png', 'pics/2.png', 'pics/3.png', 'pics/4.png',
+               'pics/5.png', 'pics/6.png', 'pics/7.png', 'pics/8.png']
+        lst2 = ['0', 'empty', 'bomb', '1', '2', '3', '4', '5', '6', '7', '8']
         self.images = {}
-        im = pygame.image.load('pics/0.png')
-        im = pygame.transform.scale(im, (25, 25))
-        self.images['0'] = im
-        im = pygame.image.load('pics/not_e.png')
-        im = pygame.transform.scale(im, (25, 25))
-        self.images['empty'] = im
-        im = pygame.image.load('pics/bomb.png')
-        im = pygame.transform.scale(im, (25, 25))
-        self.images['bomb'] = im
-        im = pygame.image.load('pics/1.png')
-        im = pygame.transform.scale(im, (25, 25))
-        self.images['1'] = im
-        im = pygame.image.load('pics/2.png')
-        im = pygame.transform.scale(im, (25, 25))
-        self.images['2'] = im
-        im = pygame.image.load('pics/3.png')
-        im = pygame.transform.scale(im, (25, 25))
-        self.images['3'] = im
-        im = pygame.image.load('pics/4.png')
-        im = pygame.transform.scale(im, (25, 25))
-        self.images['4'] = im
-        im = pygame.image.load('pics/5.png')
-        im = pygame.transform.scale(im, (25, 25))
-        self.images['5'] = im
-        im = pygame.image.load('pics/6.png')
-        im = pygame.transform.scale(im, (25, 25))
-        self.images['6'] = im
-        im = pygame.image.load('pics/7.png')
-        im = pygame.transform.scale(im, (25, 25))
-        self.images['7'] = im
-        im = pygame.image.load('pics/8.png')
-        im = pygame.transform.scale(im, (25, 25))
-        self.images['8'] = im
-        # image = pygame.image.load()
+        for n, pic in enumerate(lst):
+            im = pygame.image.load(pic)
+            im = pygame.transform.scale(im, (int(self.pieceSize[0]), int(self.pieceSize[1])))
+            self.images[lst2[n]] = im
 
     def getImage(self, cell):
         if cell.click():
@@ -151,11 +128,10 @@ class Game:
             if cell.get_bomb():
                 return 'bomb'
             # потом вместо восьмерки флаг должен быть
-            return '8' if cell.flag() else 'empty'
         return '8' if cell.flag() else 'empty'
 
     def Click(self, position, flag):
-        index = (position[1] // 25 - 2, position[0] // 25 - 1)
+        index = tuple(int(pos // size) for pos, size in zip(position, self.pieceSize))[::-1]
         c = self.board.getCell(index)
         self.board.Click(c, flag)
 
@@ -201,7 +177,7 @@ class Board:
                 neighbors.append(self.board[r][c])
 
     def Click(self, cell, flag):
-        if cell.click() or (not flag and not cell.flag()):
+        if cell.click() or (not flag and cell.flag()):
             return
         if flag:
             cell.set_flag()
@@ -302,13 +278,35 @@ class Solver:
 
     def unflagged(self, neighbors):
         for cell in neighbors:
-            if not cell.flagged():
+            if not cell.flag():
                 self.board.Click(cell, False)
 
     def all_flag(self, neighbors):
         for cell in neighbors:
             if not cell.flag():
                 self.board.Click(cell, True)
+
+
+class Choice(Menu):
+    def select(self):
+        if self.current_option == 0:
+            switch_scene(game((10, 10), 0.1))
+        if self.current_option == 1:
+            switch_scene(game((15, 15), 0.2))
+        if self.current_option == 2:
+            switch_scene(game((25, 25), 0.35))
+        self.functions[self.current_option]()
+
+
+class Over(Choice):
+    def select(self):
+        if self.current_option == 0:
+            switch_scene(scene1())
+        if self.current_option == 1:
+            switch_scene(stats())
+        if self.current_option == 2:
+            switch_scene(scene2())
+        self.functions[self.current_option]()
 
 
 def switch_scene(scene):
@@ -319,9 +317,13 @@ def switch_scene(scene):
 current_scene = None
 
 menu = Menu()
+choice = Choice()
 menu.append_option('Новая игра', lambda: print('new game'))
 menu.append_option('Статистика игрока', lambda: print('statistic'))
 menu.append_option('Выйти', quit)
+choice.append_option('Легко', lambda: print('easy'))
+choice.append_option('Средне', lambda: print('normal'))
+choice.append_option('Сложно', lambda: print('hard'))
 # создать бд и читать количесво побед от туда
 all_games = FONT.render(f'Всего игр сыграно: {0}', True, (255, 0, 0))
 change_str = pygame.font.SysFont('calibry', 30).render(f'клавиши S и W для выбора', True, (255, 255, 255))
@@ -354,6 +356,30 @@ def scene1():
     pygame.quit()
 
 
+def scene2():
+    pygame.init()
+    screen = pygame.display.set_mode((800, 800))
+    pygame.display.set_caption('Сапер')
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+                switch_scene(None)
+            elif event.type == KEYDOWN:
+                if event.key == K_w:
+                    choice.switch(-1)
+                elif event.key == K_s:
+                    choice.switch(1)
+                elif event.key == K_SPACE:
+                    choice.select()
+                    running = False
+        wallpaper.run(screen)
+        choice.draw(screen, 250, 300, 75)
+        screen.blit(change_str, (0, 775))
+        pygame.display.flip()
+    pygame.quit()
+
 def stats():
     pygame.init()
     screen = pygame.display.set_mode((800, 800))
@@ -375,10 +401,8 @@ def stats():
     pygame.quit()
 
 
-def game():
-    board = Board((20, 20), 0.1)
-    screenSize = (800, 800)
-    game = Game(board, screenSize)
+def game(size, bombs):
+    game = Game(size, bombs)
     game.run()
     running = True
     while running:
